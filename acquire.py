@@ -20,37 +20,86 @@ from tabulate import tabulate
 #  Acquire Codeup Blog Data  #
 #----------------------------#
 
-def get_soup(link):
-    headers = {'User-Agent': 'Codeup Data Science'}
-    response = get(link, headers=headers)
+urls = ['https://codeup.com/codeups-data-science-career-accelerator-is-here/',
+        'https://codeup.com/data-science-myths/',
+        'https://codeup.com/data-science-vs-data-analytics-whats-the-difference/',
+        'https://codeup.com/10-tips-to-crush-it-at-the-sa-tech-job-fair/',
+        'https://codeup.com/competitor-bootcamps-are-closing-is-the-model-in-danger/']
 
-    return BeautifulSoup(response.content, 'html.parser')
+def get_blog_articles(urls, cache=False):
+    '''
+    This function takes in a list of Codeup Blog urls and a parameter
+    with default cache == False which returns a df from a csv file.
+    If cache == True, the function scrapes the title and text for each url, 
+    creates a list of dictionaries with the title and text for each blog, 
+    converts list to df, and returns df.
+    '''
+    if cache == False:
+        df = pd.read_csv('big_blogs.csv', index_col=0)
+    else:
+        headers = {'User-Agent': 'Codeup Bayes Data Science'} 
 
-def get_article_content(soup):
-    article_text = soup.find('div', class_='jupiterx-post-content clearfix').text
-    article_title = soup.find('h1', class_='jupiterx-post-title').text
+        # Create an empty list to hold dictionaries
+        articles = []
 
-    return {'title': article_title,
-            'content': article_text}
+        # Loop through each url in our list of urls
+        for url in urls:
 
-def get_blog_articles():
-    links = ['https://codeup.com/codeups-data-science-career-accelerator-is-here/',
-    'https://codeup.com/data-science-myths/',
-    'https://codeup.com/data-science-vs-data-analytics-whats-the-difference/',
-    'https://codeup.com/10-tips-to-crush-it-at-the-sa-tech-job-fair/',
-    'https://codeup.com/competitor-bootcamps-are-closing-is-the-model-in-danger/']
+            # get request to each url saved in response
+            response = get(url, headers=headers)
 
-    articles = []
+            # Create soup object from response text and parse
+            soup = BeautifulSoup(response.text, 'html.parser')
 
-    for link in links:
-        soup = get_soup(link)
+            # Save the title of each blog in variable title
+            title = soup.find('h1', itemprop='headline').text
 
-        article_dictionary = get_article_content(soup)
+            # Save the text in each blog to variable text
+            text = soup.find('div', itemprop='text').text
 
-        articles.append(article_dictionary)
+            # Create a dictionary holding the title and text for each blog
+            article = {'title': title, 'content': text}
 
-        return articles
+            # Add each dictionary to the articles list of dictionaries
+            articles.append(article)
+            
+        # convert our list of dictionaries to a df
+        df = pd.DataFrame(articles)
 
+        # Write df to csv file for faster access
+        df.to_csv('big_blogs.csv')
+    
+    return df
+
+def get_all_urls():
+    '''
+    This function scrapes all of the Codeup blog urls from
+    the main Codeup blog page and returns a list of urls.
+    '''
+    # The main Codeup blog page with all the urls
+    url = 'https://codeup.com/resources/#blog'
+    
+    headers = {'User-Agent': 'Codeup Data Science'} 
+    
+    # Send request to main page and get response
+    response = get(url, headers=headers)
+    
+    # Create soup object using response
+    soup = BeautifulSoup(response.text, 'html.parser')
+    
+    # Create empty list to hold the urls for all blogs
+    urls = []
+    
+    # Create a list of the element tags that hold the href/links
+    link_list = soup.find_all('a', class_='jet-listing-dynamic-link__link')
+    
+    # get the href/link from each element tag in my list
+    for link in link_list:
+        
+        # Add the link to my urls list
+        urls.append(link['href'])
+        
+    return urls
 #-------------------------#
 #  Acquire InShorts Data  #
 #-------------------------#
