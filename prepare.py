@@ -1,17 +1,16 @@
-from requests import get
-from bs4 import BeautifulSoup
-import numpy as np
-import os
-
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
-
-import re
 import pandas as pd
-from tabulate import tabulate
+import numpy as np
+
+import os
+import unicodedata
+import re
+import json
+
+import nltk
+from nltk.tokenize.toktok import ToktokTokenizer
+from nltk.corpus import stopwords
+
+from acquire import get_news_articles
 
 # ~~~~~ Prepare The Data ~~~~~ #
 
